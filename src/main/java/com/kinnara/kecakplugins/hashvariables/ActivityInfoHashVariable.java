@@ -21,6 +21,7 @@ import org.joget.apps.app.model.DefaultHashVariablePlugin;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.workflow.model.WorkflowActivity;
+import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.joget.workflow.util.WorkflowUtil;
 import org.springframework.context.ApplicationContext;
@@ -35,62 +36,24 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 	@Override
 	public String processHashVariable(String variableKey) {
 		String temp[] = variableKey.split("\\.");
-		String activityId = temp[0];
-		String tableName = temp[1].trim();
-        String columnName = temp[2].trim();
+		String activityId = temp[0].trim();
+        String wVarKey = temp[1].trim();
         
         
     	LogUtil.info(getClassName(), "[ACTID] "+activityId);
-        LogUtil.info(getClassName(), "[Column Name] "+columnName);
+        LogUtil.info(getClassName(), "[WVar Key] "+wVarKey);
         ApplicationContext appContext = AppUtil.getApplicationContext();
-        DataSource ds = (DataSource) appContext.getBean("setupDataSource");
-        
-		WorkflowManager wfManager = (WorkflowManager)appContext.getBean("workflowManager");
-        WorkflowActivity act = wfManager.getActivityById(activityId);
-        if(act!=null) {
-        	LogUtil.info(getClassName(), "[ACT] "+act.getId());
-        }
-        String processId = null;
-        String query=
-        		"SELECT a.ProcessId "+ 
-        		"FROM shkactivities a "+ 
-        		"WHERE a.Id= ? ";
-        try(Connection con = ds.getConnection();PreparedStatement pstmt = con.prepareStatement(query)) {
-        	pstmt.setString(1, activityId);
-        	try (ResultSet rs = pstmt.executeQuery();) {
-        		while (rs.next()) {
-        			processId = rs.getString("ProcessId");
-        		}
-        	}catch (Exception e) {
-    			LogUtil.error(getClassName(), e, e.getMessage());
-    		}
-        	
-        	if(processId!=null) {
-        		// iterate wf process link
-        		// get form data
-        		String columnValue = null;
-        		query = "SELECT c_"+columnName+" AS "+columnName+" FROM app_fd_"+tableName+" WHERE id=? ";
-        		try(PreparedStatement ps = con.prepareStatement(query)){
-        			ps.setString(1, processId);
-        			try (ResultSet rs = ps.executeQuery();) {
-                		while (rs.next()) {
-                			columnValue = rs.getString(columnName);
-                		}
-                	}catch (Exception e) {
-            			LogUtil.error(getClassName(), e, e.getMessage());
-            		}
-                	if(columnValue!=null) {
-                		LogUtil.info(getClassName(), "[VALUE] "+columnValue);
-                		return columnValue;
-                	}
-        		}catch (Exception e) {
-        			LogUtil.error(getClassName(), e, e.getMessage());
+        WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+        WorkflowActivity activity = workflowManager.getActivityById(activityId);
+        if(activity!=null) {
+        	Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(activity.getId());
+        	for(WorkflowVariable wVar: variableList) {
+        		if(wVar.getName().equals(wVarKey)) {
+        			LogUtil.info(getClassName(), "[Value] "+(String) wVar.getVal());
+        			return (String) wVar.getVal();
         		}
         	}
-		} catch (Exception e) {
-			LogUtil.error(getClassName(), e, e.getMessage());
-		}
-        
+        }
 		return null;
 	}
 
@@ -141,7 +104,7 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 	@Override
     public Collection<String> availableSyntax() {
         Collection<String> syntax = new ArrayList<String>();
-        syntax.add("activityInfo.KEY.TABLENAME.COLUMNNAME");
+        syntax.add("activityInfo.ActId.VariableKey");
         
         return syntax;
     }
