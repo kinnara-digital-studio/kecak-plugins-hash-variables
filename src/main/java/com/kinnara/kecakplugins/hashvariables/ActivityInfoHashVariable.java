@@ -49,14 +49,14 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 			}
 
 			if(result==null || result.equals("")) {
-				result = getActivityAttribute(trackWflowActivity,key);
+				result = getActivityAttribute(activity,trackWflowActivity,key);
 			}
 		}
 
 		return result;
 	}
 
-	private String getActivityAttribute(WorkflowActivity activity, String attribute) {
+	private String getActivityAttribute(WorkflowActivity activity, WorkflowActivity runningActivityInfo, String attribute) {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
 
@@ -64,9 +64,12 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
 				Date result = (Date) method.invoke(activity);
 				return sdf.format(result);
-			}else {
+			}else if(attribute.equals("ActivityDefId")){
 				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
 				return (String) method.invoke(activity);
+			}else {
+				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
+				return (String) method.invoke(runningActivityInfo);
 			}
 
 		} catch (NoSuchMethodException e) {
@@ -128,6 +131,7 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 //		syntax.add("activityInfo.ActId.Due");
 //		syntax.add("activityInfo.ActId.Name");
 //		syntax.add("activityInfo.ActId.State");
+		syntax.add("activityInfo.ActId.ActivityDefId");
 		return syntax;
 	}
 }
