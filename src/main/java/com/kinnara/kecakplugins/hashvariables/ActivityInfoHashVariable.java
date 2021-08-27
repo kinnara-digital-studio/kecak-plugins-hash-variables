@@ -25,49 +25,50 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 	@Override
 	public String processHashVariable(String variableKey) {
 		if (variableKey.startsWith("{") && variableKey.contains("}")) {
-            return null;
-        }
-		
+			return null;
+		}
+
 		String temp[] = variableKey.split("\\.");
 		String activityId = temp[0].trim();
-        String key = temp[1].trim();
-        
-        ApplicationContext appContext = AppUtil.getApplicationContext();
-        WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
-        WorkflowActivity activity = workflowManager.getActivityById(activityId);
-        
-        if(activity!=null) {
-        	if(key.equals("VariableKey")) {
-	        	Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(activity.getId());
-	        	for(WorkflowVariable wVar: variableList) {
-	        		if(wVar.getName().equals(key)) {
-	        			return (String) wVar.getVal();
-	        		}
-	        	}
-	        }else {
-	        	return getActivityAttribute(activity,key);
-	        }
-        }
-        
-		return null;
+		String key = temp[1].trim();
+		
+//		LogUtil.info(getClassName(), "[ACTIVITY ID] "+activityId);
+
+		ApplicationContext appContext = AppUtil.getApplicationContext();
+		WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+		WorkflowActivity activity = workflowManager.getActivityById(activityId);
+		WorkflowActivity trackWflowActivity = workflowManager.getRunningActivityInfo(activityId);
+		String result = null;
+		
+		if(activity!=null) {
+			Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(activity.getId());
+			for(WorkflowVariable wVar: variableList) {
+				if(wVar.getName().equals(key)) {
+					result = (String) wVar.getVal();
+				}
+			}
+
+			if(result==null || result.equals("")) {
+				result = getActivityAttribute(trackWflowActivity,key);
+			}
+		}
+
+		return result;
 	}
 
 	private String getActivityAttribute(WorkflowActivity activity, String attribute) {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
-			
-			if(attribute.equals("FinishTime")||attribute.equals("Due")) {
-//				LogUtil.info(getClassName(), "[Date1] "+sdf.format(activity.getFinishTime()));
-				
+
+			if(attribute.equals("FinishTime")) {
 				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
 				Date result = (Date) method.invoke(activity);
-//				LogUtil.info(getClassName(), "[Date] "+sdf.format(result));
 				return sdf.format(result);
 			}else {
 				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
 				return (String) method.invoke(activity);
 			}
-			
+
 		} catch (NoSuchMethodException e) {
 			LogUtil.error(getClassName(), e, e.getMessage());
 		} catch (SecurityException e) {
@@ -113,20 +114,20 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 	}
 
 	@Override
-    public Collection<String> availableSyntax() {
-        Collection<String> syntax = new ArrayList<String>();
-        syntax.add("activityInfo.ActId.VariableKey");
-        syntax.add("activityInfo.ActId.ProcessDefId");
-        syntax.add("activityInfo.ActId.ProcessId");
-        syntax.add("activityInfo.ActId.ProcessName");
-        syntax.add("activityInfo.ActId.Delay");
-        syntax.add("activityInfo.ActId.Performer");
-        syntax.add("activityInfo.ActId.Limit");
-        syntax.add("activityInfo.ActId.Description");
-        syntax.add("activityInfo.ActId.FinishTime");
-        syntax.add("activityInfo.ActId.Due");
-        syntax.add("activityInfo.ActId.Name");
-        syntax.add("activityInfo.ActId.State");
-        return syntax;
-    }
+	public Collection<String> availableSyntax() {
+		Collection<String> syntax = new ArrayList<String>();
+		syntax.add("activityInfo.ActId.VariableKey");
+//		syntax.add("activityInfo.ActId.ProcessDefId");
+//		syntax.add("activityInfo.ActId.ProcessId");
+//		syntax.add("activityInfo.ActId.ProcessName");
+//		syntax.add("activityInfo.ActId.Delay");
+		syntax.add("activityInfo.ActId.Performer");
+//		syntax.add("activityInfo.ActId.Limit");
+//		syntax.add("activityInfo.ActId.Description");
+		syntax.add("activityInfo.ActId.FinishTime");
+//		syntax.add("activityInfo.ActId.Due");
+//		syntax.add("activityInfo.ActId.Name");
+//		syntax.add("activityInfo.ActId.State");
+		return syntax;
+	}
 }
