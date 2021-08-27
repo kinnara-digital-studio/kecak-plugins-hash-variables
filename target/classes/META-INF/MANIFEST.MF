@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1629904169743
+Bnd-LastModified: 1630031503809
 Build-Jdk-Spec: 1.8
 Bundle-Activator: com.kinnara.kecakplugins.hashvariables.Activator
 Bundle-ManifestVersion: 2

@@ -1,29 +1,18 @@
 package com.kinnara.kecakplugins.hashvariables;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 
-import javax.sql.DataSource;
-
-import org.enhydra.shark.Shark;
-import org.enhydra.shark.api.client.wfmc.wapi.WMConnectInfo;
-import org.enhydra.shark.api.client.wfmc.wapi.WMFilter;
-import org.enhydra.shark.api.client.wfmc.wapi.WMSessionHandle;
-import org.enhydra.shark.api.client.wfmodel.WfActivity;
-import org.enhydra.shark.api.client.wfmodel.WfActivityIterator;
-import org.enhydra.shark.api.client.wfservice.AdminMisc;
-import org.enhydra.shark.api.client.wfservice.SharkConnection;
-import org.enhydra.shark.api.common.ActivityFilterBuilder;
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.workflow.model.WorkflowActivity;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
-import org.joget.workflow.util.WorkflowUtil;
 import org.springframework.context.ApplicationContext;
 
 public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
@@ -35,25 +24,61 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 
 	@Override
 	public String processHashVariable(String variableKey) {
+		if (variableKey.startsWith("{") && variableKey.contains("}")) {
+            return null;
+        }
+		
 		String temp[] = variableKey.split("\\.");
 		String activityId = temp[0].trim();
-        String wVarKey = temp[1].trim();
+        String key = temp[1].trim();
         
-        
-    	LogUtil.info(getClassName(), "[ACTID] "+activityId);
-        LogUtil.info(getClassName(), "[WVar Key] "+wVarKey);
         ApplicationContext appContext = AppUtil.getApplicationContext();
         WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
         WorkflowActivity activity = workflowManager.getActivityById(activityId);
+        
         if(activity!=null) {
-        	Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(activity.getId());
-        	for(WorkflowVariable wVar: variableList) {
-        		if(wVar.getName().equals(wVarKey)) {
-        			LogUtil.info(getClassName(), "[Value] "+(String) wVar.getVal());
-        			return (String) wVar.getVal();
-        		}
-        	}
+        	if(key.equals("VariableKey")) {
+	        	Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(activity.getId());
+	        	for(WorkflowVariable wVar: variableList) {
+	        		if(wVar.getName().equals(key)) {
+	        			return (String) wVar.getVal();
+	        		}
+	        	}
+	        }else {
+	        	return getActivityAttribute(activity,key);
+	        }
         }
+        
+		return null;
+	}
+
+	private String getActivityAttribute(WorkflowActivity activity, String attribute) {
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
+			
+			if(attribute.equals("FinishTime")||attribute.equals("Due")) {
+//				LogUtil.info(getClassName(), "[Date1] "+sdf.format(activity.getFinishTime()));
+				
+				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
+				Date result = (Date) method.invoke(activity);
+//				LogUtil.info(getClassName(), "[Date] "+sdf.format(result));
+				return sdf.format(result);
+			}else {
+				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
+				return (String) method.invoke(activity);
+			}
+			
+		} catch (NoSuchMethodException e) {
+			LogUtil.error(getClassName(), e, e.getMessage());
+		} catch (SecurityException e) {
+			LogUtil.error(getClassName(), e, e.getMessage());
+		} catch (IllegalAccessException e) {
+			LogUtil.error(getClassName(), e, e.getMessage());
+		} catch (IllegalArgumentException e) {
+			LogUtil.error(getClassName(), e, e.getMessage());
+		} catch (InvocationTargetException e) {
+			LogUtil.error(getClassName(), e, e.getMessage());
+		}
 		return null;
 	}
 
@@ -87,25 +112,21 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 		return getClass().getPackage().getImplementationTitle();
 	}
 
-	protected SharkConnection connect() throws Exception {
-        return connect(null);
-    }
-	
-	protected SharkConnection connect(String username) throws Exception {
-        SharkConnection sConn = Shark.getInstance().getSharkConnection();
-        if (username == null) {
-            username = WorkflowUtil.getCurrentUsername();
-        }
-        WMConnectInfo wmconnInfo = new WMConnectInfo(username, username, "WorkflowManager", "");
-        sConn.connect(wmconnInfo);
-        return sConn;
-    }
-	
 	@Override
     public Collection<String> availableSyntax() {
         Collection<String> syntax = new ArrayList<String>();
         syntax.add("activityInfo.ActId.VariableKey");
-        
+        syntax.add("activityInfo.ActId.ProcessDefId");
+        syntax.add("activityInfo.ActId.ProcessId");
+        syntax.add("activityInfo.ActId.ProcessName");
+        syntax.add("activityInfo.ActId.Delay");
+        syntax.add("activityInfo.ActId.Performer");
+        syntax.add("activityInfo.ActId.Limit");
+        syntax.add("activityInfo.ActId.Description");
+        syntax.add("activityInfo.ActId.FinishTime");
+        syntax.add("activityInfo.ActId.Due");
+        syntax.add("activityInfo.ActId.Name");
+        syntax.add("activityInfo.ActId.State");
         return syntax;
     }
 }
