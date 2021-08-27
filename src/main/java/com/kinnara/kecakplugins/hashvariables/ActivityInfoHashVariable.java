@@ -31,15 +31,15 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 		String temp[] = variableKey.split("\\.");
 		String activityId = temp[0].trim();
 		String key = temp[1].trim();
-		
-//		LogUtil.info(getClassName(), "[ACTIVITY ID] "+activityId);
+
+		//		LogUtil.info(getClassName(), "[ACTIVITY ID] "+activityId);
 
 		ApplicationContext appContext = AppUtil.getApplicationContext();
 		WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
 		WorkflowActivity activity = workflowManager.getActivityById(activityId);
 		WorkflowActivity trackWflowActivity = workflowManager.getRunningActivityInfo(activityId);
 		String result = null;
-		
+
 		if(activity!=null) {
 			Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(activity.getId());
 			for(WorkflowVariable wVar: variableList) {
@@ -67,6 +67,14 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 			}else if(attribute.equals("ActivityDefId")){
 				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
 				return (String) method.invoke(activity);
+			}else if(attribute.equals("Performer")){
+				String users = "";
+				String[] assignmentUsers = runningActivityInfo.getAssignmentUsers();
+				users = String.join(";", assignmentUsers);
+				if(users.equals("")) {
+					users = runningActivityInfo.getNameOfAcceptedUser();
+				}
+				return users;
 			}else {
 				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
 				return (String) method.invoke(runningActivityInfo);
@@ -120,17 +128,17 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 	public Collection<String> availableSyntax() {
 		Collection<String> syntax = new ArrayList<String>();
 		syntax.add("activityInfo.ActId.VariableKey");
-//		syntax.add("activityInfo.ActId.ProcessDefId");
-//		syntax.add("activityInfo.ActId.ProcessId");
-//		syntax.add("activityInfo.ActId.ProcessName");
-//		syntax.add("activityInfo.ActId.Delay");
+		//		syntax.add("activityInfo.ActId.ProcessDefId");
+		//		syntax.add("activityInfo.ActId.ProcessId");
+		//		syntax.add("activityInfo.ActId.ProcessName");
+		//		syntax.add("activityInfo.ActId.Delay");
 		syntax.add("activityInfo.ActId.Performer");
-//		syntax.add("activityInfo.ActId.Limit");
-//		syntax.add("activityInfo.ActId.Description");
+		//		syntax.add("activityInfo.ActId.Limit");
+		//		syntax.add("activityInfo.ActId.Description");
 		syntax.add("activityInfo.ActId.FinishTime");
-//		syntax.add("activityInfo.ActId.Due");
-//		syntax.add("activityInfo.ActId.Name");
-//		syntax.add("activityInfo.ActId.State");
+		//		syntax.add("activityInfo.ActId.Due");
+		//		syntax.add("activityInfo.ActId.Name");
+		//		syntax.add("activityInfo.ActId.State");
 		syntax.add("activityInfo.ActId.ActivityDefId");
 		return syntax;
 	}
