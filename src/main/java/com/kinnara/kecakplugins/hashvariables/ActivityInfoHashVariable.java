@@ -38,15 +38,13 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin {
         String activityId = temp[0].trim();
         String key = temp[1].trim();
 
-        //		LogUtil.info(getClassName(), "[ACTIVITY ID] "+activityId);
-
         ApplicationContext appContext = AppUtil.getApplicationContext();
         WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
         WorkflowActivity activity = workflowManager.getActivityById(activityId);
         WorkflowActivity trackWflowActivity = workflowManager.getRunningActivityInfo(activityId);
 
         if (activity != null) {
-            return ifNullThen(getActivityAttribute(activity, trackWflowActivity, key), () -> {
+            return Optional.ofNullable(getActivityAttribute(activity, trackWflowActivity, key)).orElseGet(() -> {
                 Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(activity.getId());
                 for (WorkflowVariable wVar : variableList) {
                     if (wVar.getName().equals(key)) {
@@ -65,7 +63,7 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin {
 
         try {
             final Method method = WorkflowActivity.class.getDeclaredMethod("get" + attribute);
-            Object value = ifNullThen(method.invoke(runningActivityInfo), Try.onSupplier(() -> method.invoke(activity)));
+            Object value = Optional.ofNullable(method.invoke(runningActivityInfo)).orElseGet(Try.onSupplier(() -> method.invoke(activity)));
             if (value instanceof Date) {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
                 return sdf.format(value);
@@ -154,9 +152,5 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin {
                 .flatMap(Collection::stream)
                 .map(WorkflowVariable::getId)
                 .collect(Collectors.toSet());
-    }
-
-    protected <T, U extends T> T ifNullThen(@Nullable T value, @Nonnull Supplier<U> failover) {
-        return value == null ? failover.get() : value;
     }
 }
