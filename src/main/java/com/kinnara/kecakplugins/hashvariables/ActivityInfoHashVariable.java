@@ -62,7 +62,7 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
 
 			if(attribute.equals("FinishTime")) {
 				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
-				Date result = (Date) method.invoke(activity);
+				Date result = (Date) method.invoke(runningActivityInfo);
 				return sdf.format(result);
 			}else if(attribute.equals("ActivityDefId")){
 				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
