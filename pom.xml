@@ -4,9 +4,9 @@
     <groupId>com.kinnara.kecakplugins.hashvariables</groupId>
     <artifactId>kecak-plugins-hash-variables</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>kecak-plugins-hash-variables</name>
-    <url>http://www.joget.org</url>
+    <url>http://www.kecak.org</url>
     <build>
         <plugins>
             <plugin>
@@ -15,6 +15,20 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <debug>true</debug>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
             <plugin>
@@ -85,7 +99,11 @@
             <scope>provided</scope>
         </dependency>
         <!-- Change plugin specific dependencies here -->
-        
+        <dependency>
+            <groupId>com.kinnarastudio</groupId>
+            <artifactId>kinnara-commons</artifactId>
+            <version>1.2.5</version>
+        </dependency>
         <!-- End change plugin specific dependencies here -->
     </dependencies>
 </project>

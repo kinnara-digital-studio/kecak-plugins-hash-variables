@@ -1,145 +1,162 @@
 package com.kinnara.kecakplugins.hashvariables;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-
+import com.kinnarastudio.commons.Try;
+import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.workflow.model.WorkflowActivity;
+import org.joget.workflow.model.WorkflowProcess;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.springframework.context.ApplicationContext;
 
-public class ActivityInfoHashVariable extends DefaultHashVariablePlugin{
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-	@Override
-	public String getPrefix() {
-		return "activityInfo";
-	}
+public class ActivityInfoHashVariable extends DefaultHashVariablePlugin {
 
-	@Override
-	public String processHashVariable(String variableKey) {
-		if (variableKey.startsWith("{") && variableKey.contains("}")) {
-			return null;
-		}
+    @Override
+    public String getPrefix() {
+        return "activityInfo";
+    }
 
-		String temp[] = variableKey.split("\\.");
-		String activityId = temp[0].trim();
-		String key = temp[1].trim();
+    @Override
+    public String processHashVariable(String variableKey) {
+        if (variableKey.startsWith("{") && variableKey.contains("}")) {
+            return null;
+        }
 
-		//		LogUtil.info(getClassName(), "[ACTIVITY ID] "+activityId);
+        String temp[] = variableKey.split("\\.");
+        String activityId = temp[0].trim();
+        String key = temp[1].trim();
 
-		ApplicationContext appContext = AppUtil.getApplicationContext();
-		WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
-		WorkflowActivity activity = workflowManager.getActivityById(activityId);
-		WorkflowActivity trackWflowActivity = workflowManager.getRunningActivityInfo(activityId);
-		String result = null;
+        //		LogUtil.info(getClassName(), "[ACTIVITY ID] "+activityId);
 
-		if(activity!=null) {
-			Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(activity.getId());
-			for(WorkflowVariable wVar: variableList) {
-				if(wVar.getName().equals(key)) {
-					result = (String) wVar.getVal();
-				}
-			}
+        ApplicationContext appContext = AppUtil.getApplicationContext();
+        WorkflowManager workflowManager = (WorkflowManager) appContext.getBean("workflowManager");
+        WorkflowActivity activity = workflowManager.getActivityById(activityId);
+        WorkflowActivity trackWflowActivity = workflowManager.getRunningActivityInfo(activityId);
 
-			if(result==null || result.equals("")) {
-				result = getActivityAttribute(activity,trackWflowActivity,key);
-			}
-		}
+        if (activity != null) {
+            return ifNullThen(getActivityAttribute(activity, trackWflowActivity, key), () -> {
+                Collection<WorkflowVariable> variableList = workflowManager.getActivityVariableList(activity.getId());
+                for (WorkflowVariable wVar : variableList) {
+                    if (wVar.getName().equals(key)) {
+                        return (String) wVar.getVal();
+                    }
+                }
+                return "";
+            });
+        }
 
-		return result;
-	}
+        return null;
+    }
 
-	private String getActivityAttribute(WorkflowActivity activity, WorkflowActivity runningActivityInfo, String attribute) {
-		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
+    protected @Nullable String getActivityAttribute(WorkflowActivity activity, WorkflowActivity runningActivityInfo, String attribute) {
+        LogUtil.debug(getClassName(), "getActivityAttribute : attribute [" + attribute + "]");
 
-			if(attribute.equals("FinishTime")) {
-				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
-				Date result = (Date) method.invoke(runningActivityInfo);
-				return sdf.format(result);
-			}else if(attribute.equals("ActivityDefId")){
-				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
-				return (String) method.invoke(activity);
-			}else if(attribute.equals("Performer")){
-				String users = "";
-				String[] assignmentUsers = runningActivityInfo.getAssignmentUsers();
-				users = String.join(";", assignmentUsers);
-				if(users.equals("")) {
-					users = runningActivityInfo.getNameOfAcceptedUser();
-				}
-				return users;
-			}else {
-				Method method = WorkflowActivity.class.getDeclaredMethod("get"+attribute);
-				return (String) method.invoke(runningActivityInfo);
-			}
+        try {
+            final Method method = WorkflowActivity.class.getDeclaredMethod("get" + attribute);
+            Object value = ifNullThen(method.invoke(runningActivityInfo), Try.onSupplier(() -> method.invoke(activity)));
+            if (value instanceof Date) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
+                return sdf.format(value);
+            } else {
+                return (String) method.invoke(runningActivityInfo);
+            }
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            return null;
+        }
+    }
 
-		} catch (NoSuchMethodException e) {
-			LogUtil.error(getClassName(), e, e.getMessage());
-		} catch (SecurityException e) {
-			LogUtil.error(getClassName(), e, e.getMessage());
-		} catch (IllegalAccessException e) {
-			LogUtil.error(getClassName(), e, e.getMessage());
-		} catch (IllegalArgumentException e) {
-			LogUtil.error(getClassName(), e, e.getMessage());
-		} catch (InvocationTargetException e) {
-			LogUtil.error(getClassName(), e, e.getMessage());
-		}
-		return null;
-	}
+    @Override
+    public String getLabel() {
+        return getName();
+    }
 
-	@Override
-	public String getLabel() {
-		return getName();
-	}
+    @Override
+    public String getClassName() {
+        return getClass().getName();
+    }
 
-	@Override
-	public String getClassName() {
-		return getClass().getName();
-	}
+    @Override
+    public String getPropertyOptions() {
+        return null;
+    }
 
-	@Override
-	public String getPropertyOptions() {
-		return null;
-	}
+    @Override
+    public String getName() {
+        return "Activity Info Hash Variable";
+    }
 
-	@Override
-	public String getName() {
-		return "Activity Info Hash Variable";
-	}
+    @Override
+    public String getVersion() {
+        return getClass().getPackage().getImplementationVersion();
+    }
 
-	@Override
-	public String getVersion() {
-		return getClass().getPackage().getImplementationVersion();
-	}
+    @Override
+    public String getDescription() {
+        return getClass().getPackage().getImplementationTitle();
+    }
 
-	@Override
-	public String getDescription() {
-		return getClass().getPackage().getImplementationTitle();
-	}
+    @Override
+    public Collection<String> availableSyntax() {
+        Collection<String> syntax = Stream.concat(getGetterMethods(WorkflowActivity.class).stream().map(s -> s.replaceAll("^get", "")),
+                        getWorkflowVariables(AppUtil.getCurrentAppDefinition()).stream())
+                .map(s -> String.join(".", getPrefix(), "ACTIVITY_ID", s))
+                .collect(Collectors.toSet());
 
-	@Override
-	public Collection<String> availableSyntax() {
-		Collection<String> syntax = new ArrayList<String>();
-		syntax.add("activityInfo.ActId.VariableKey");
-		//		syntax.add("activityInfo.ActId.ProcessDefId");
-		//		syntax.add("activityInfo.ActId.ProcessId");
-		//		syntax.add("activityInfo.ActId.ProcessName");
-		//		syntax.add("activityInfo.ActId.Delay");
-		syntax.add("activityInfo.ActId.Performer");
-		//		syntax.add("activityInfo.ActId.Limit");
-		//		syntax.add("activityInfo.ActId.Description");
-		syntax.add("activityInfo.ActId.FinishTime");
-		//		syntax.add("activityInfo.ActId.Due");
-		//		syntax.add("activityInfo.ActId.Name");
-		//		syntax.add("activityInfo.ActId.State");
-		syntax.add("activityInfo.ActId.ActivityDefId");
-		return syntax;
-	}
+        return syntax;
+    }
+
+    /**
+     * Get collection of getter methods
+     *
+     * @param cls Class
+     * @return
+     */
+    protected Set<String> getGetterMethods(Class<?> cls) {
+        return Optional.of(cls.getName())
+                .map(Try.onFunction(Class::forName))
+                .map(Class::getMethods)
+                .map(Arrays::stream)
+                .orElseGet(Stream::empty)
+                .filter(m -> m.getParameterCount() == 0)
+                .map(Try.onFunction(Method::getName))
+                .filter(s -> s.startsWith("get"))
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Get collection of workflow variables
+     *
+     * @param appDefinition Application definition
+     * @return
+     */
+    protected Set<String> getWorkflowVariables(AppDefinition appDefinition) {
+        ApplicationContext applicationContext = AppUtil.getApplicationContext();
+        WorkflowManager workflowManager = (WorkflowManager) applicationContext.getBean("workflowManager");
+        return Optional.of(appDefinition)
+                .map(AppDefinition::getPackageDefinition)
+                .map(p -> workflowManager.getProcessList(p.getId(), p.getVersion().toString()))
+                .map(Collection::stream)
+                .orElseGet(Stream::empty)
+                .map(WorkflowProcess::getId)
+                .map(workflowManager::getProcessVariableDefinitionList)
+                .flatMap(Collection::stream)
+                .map(WorkflowVariable::getId)
+                .collect(Collectors.toSet());
+    }
+
+    protected <T, U extends T> T ifNullThen(@Nullable T value, @Nonnull Supplier<U> failover) {
+        return value == null ? failover.get() : value;
+    }
 }
