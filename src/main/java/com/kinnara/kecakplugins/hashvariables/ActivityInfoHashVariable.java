@@ -142,7 +142,7 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin {
     protected Set<String> getWorkflowVariables(AppDefinition appDefinition) {
         ApplicationContext applicationContext = AppUtil.getApplicationContext();
         WorkflowManager workflowManager = (WorkflowManager) applicationContext.getBean("workflowManager");
-        return Optional.of(appDefinition)
+        return Optional.ofNullable(appDefinition)
                 .map(AppDefinition::getPackageDefinition)
                 .map(p -> workflowManager.getProcessList(p.getId(), p.getVersion().toString()))
                 .map(Collection::stream)
