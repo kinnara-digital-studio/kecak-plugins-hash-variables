@@ -41,7 +41,7 @@ public class StringSplitHashVariable extends DefaultHashVariablePlugin {
                 .skip(index)
                 .findFirst()
                 .orElseGet(() -> {
-                    LogUtil.warn(getClassName(), "Error splitting string [" + str + "] with delimiter [" + delimiter+"] index [" + index + "]");
+                    LogUtil.warn(getClassName(), "Error splitting with key [" + key + "]");
                     return "";
                 });
     }
