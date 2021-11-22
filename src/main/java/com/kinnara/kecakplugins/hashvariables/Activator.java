@@ -17,6 +17,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(ActivityInfoHashVariable.class.getName(), new ActivityInfoHashVariable(), null));
         registrationList.add(context.registerService(IdGeneratorHashVariable.class.getName(), new IdGeneratorHashVariable(), null));
         registrationList.add(context.registerService(OrganizationHashVariable.class.getName(), new OrganizationHashVariable(), null));
+        registrationList.add(context.registerService(StringSplitHashVariable.class.getName(), new StringSplitHashVariable(), null));
     }
 
     public void stop(BundleContext context) {
