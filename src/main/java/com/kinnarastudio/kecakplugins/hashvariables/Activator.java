@@ -15,6 +15,7 @@ public class Activator implements BundleActivator {
 
         //Register plugin here
         registrationList.add(context.registerService(ActivityInfoHashVariable.class.getName(), new ActivityInfoHashVariable(), null));
+        registrationList.add(context.registerService(ApplicationDefinitionHashVariable.class.getName(), new ApplicationDefinitionHashVariable(), null));
         registrationList.add(context.registerService(IdGeneratorHashVariable.class.getName(), new IdGeneratorHashVariable(), null));
         registrationList.add(context.registerService(OrganizationHashVariable.class.getName(), new OrganizationHashVariable(), null));
         registrationList.add(context.registerService(StringHashVariable.class.getName(), new StringHashVariable(), null));
