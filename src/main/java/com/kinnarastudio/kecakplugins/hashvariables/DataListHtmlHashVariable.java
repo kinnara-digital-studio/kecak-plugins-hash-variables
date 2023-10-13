@@ -9,6 +9,7 @@ import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListCollection;
 import org.joget.apps.datalist.service.DataListService;
+import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
 
@@ -65,6 +66,7 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
 
             return "<table id='" + dataListName + "'><thead>" + thTd + "</thead><tbody>" + trTd + "</tbody></table>";
         } catch (DataListHtmlException e) {
+            LogUtil.error(getClass().getName(), e, e.getMessage());
             return null;
         }
     }
