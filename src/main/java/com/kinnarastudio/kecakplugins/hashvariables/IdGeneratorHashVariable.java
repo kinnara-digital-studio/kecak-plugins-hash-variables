@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.hashvariables;
+package com.kinnarastudio.kecakplugins.hashvariables;
 
 import org.joget.apps.app.dao.AppDefinitionDao;
 import org.joget.apps.app.dao.EnvironmentVariableDao;

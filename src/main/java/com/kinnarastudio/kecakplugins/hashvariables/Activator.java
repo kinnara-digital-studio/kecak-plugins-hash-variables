@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.hashvariables;
+package com.kinnarastudio.kecakplugins.hashvariables;
 
 import java.util.ArrayList;
 import java.util.Collection;

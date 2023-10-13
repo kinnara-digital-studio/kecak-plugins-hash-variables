@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.hashvariables;
+package com.kinnarastudio.kecakplugins.hashvariables;
 
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
 import org.joget.commons.util.LogUtil;
