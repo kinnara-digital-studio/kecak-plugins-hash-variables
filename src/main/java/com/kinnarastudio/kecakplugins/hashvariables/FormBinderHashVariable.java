@@ -109,6 +109,7 @@ public class FormBinderHashVariable extends DefaultHashVariablePlugin {
     @Override
     public Collection<String> availableSyntax() {
         final Collection<String> syntax = new ArrayList<>();
+        syntax.add(String.join(".", getPrefix(), "FORM_DEF_ID", "GET_FIELD"));
         syntax.add(String.join(".", getPrefix(), "FORM_DEF_ID", "GET_FIELD") + "[KEY]");
         return syntax;
     }
