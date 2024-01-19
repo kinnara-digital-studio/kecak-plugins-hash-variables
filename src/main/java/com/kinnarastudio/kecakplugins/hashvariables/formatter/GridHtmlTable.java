@@ -36,7 +36,6 @@ public class GridHtmlTable extends DefaultHashVariablePlugin {
         int limit = 2;
         String[] keys = variableKey.split("\\.", limit);
         if(keys.length < limit) {
-            LogUtil.info(getClassName(), "VariableKey ["+variableKey+"]");
             LogUtil.warn(getClassName(), "Missing parameter, usage : formatter.gridTable.[formDefId].[gridField]");
             return "";
         }
@@ -67,8 +66,6 @@ public class GridHtmlTable extends DefaultHashVariablePlugin {
         formData.setPrimaryKeyValue(appService.getOriginProcessId(wfAssignment.getProcessId()));
         formData = FormUtil.executeLoadBinders(gridElement, formData);
         FormRowSet rowSet = formData.getLoadBinderData(gridElement);
-        LogUtil.info(getClassName(), "rowSet size ["+rowSet.size()+"]");
-
 
         FormRowSet options = (FormRowSet)gridElement.getProperty(FormUtil.PROPERTY_OPTIONS);
         if(options == null) {

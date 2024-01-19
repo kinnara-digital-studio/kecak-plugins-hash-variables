@@ -31,7 +31,6 @@ public class OptionsLabel extends DefaultHashVariablePlugin {
     public String processHashVariable(String variableKey) {
         String[] split = variableKey.split("\\.", 3);
         if(split.length < 3) {
-            LogUtil.info(getClassName(), "VariableKey ["+variableKey+"]");
             LogUtil.warn(getClassName(), "Missing parameter, usage : formatter.optionsValue.[formDefId].[field].[value]");
             return "";
         }
@@ -74,7 +73,6 @@ public class OptionsLabel extends DefaultHashVariablePlugin {
         searchKey.setProperty(FormUtil.PROPERTY_VALUE, value);
         int i = Collections.binarySearch(options, searchKey, c);
         if(i < 0) {
-            LogUtil.info(getClassName(), "Options Value not found");
             return value;
         }
 

@@ -1,5 +1,6 @@
 package com.kinnarastudio.kecakplugins.hashvariables;
 
+import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.kecakplugins.hashvariables.formatter.Utilities;
 import org.joget.apps.app.lib.FormHashVariable;
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
@@ -12,16 +13,19 @@ import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.WorkflowProcessLink;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.joget.workflow.util.WorkflowUtil;
+import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FormBinderHashVariable extends DefaultHashVariablePlugin {
     public final static String LABEL = "Form Binder Hash Variable";
+
     @Override
     public String getPrefix() {
         return "formBinder";
@@ -36,38 +40,42 @@ public class FormBinderHashVariable extends DefaultHashVariablePlugin {
             final String fieldAndKey = Arrays.stream(split).skip(1).findFirst().orElseThrow(() -> new IllegalArgumentException("Incomplete arguments"));
 
             final String field;
-            final String primaryKey;
+            final String[] primaryKeys;
 
-            if(fieldAndKey.matches("\\w+\\[\\w+\\]")) {
+            if (fieldAndKey.matches("\\w+\\[\\w+\\]")) {
                 final Matcher matcherField = Pattern.compile("^\\w+(?=\\[)").matcher(fieldAndKey);
                 field = matcherField.find() ? matcherField.toString() : "";
 
                 final Matcher matcherKey = Pattern.compile("(?<=\\[)\\w+(?=\\])").matcher(fieldAndKey);
-                primaryKey = matcherKey.find() ? matcherKey.group() : "";
+                primaryKeys = matcherKey.find() ? new String[]{matcherKey.group()} : new String[0];
             } else {
                 field = fieldAndKey;
-                primaryKey = Optional.ofNullable(getPrimaryKey())
+                primaryKeys = Optional.ofNullable(getPrimaryKey())
                         .map(Arrays::stream)
                         .orElseGet(Stream::empty)
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("Primary Key is not defined"));
+                        .toArray(String[]::new);
             }
 
-            final Form form = Optional.of(formDefId)
-                    .map(Utilities::generateForm)
-                    .orElseThrow(() -> new IllegalArgumentException("Error generating form [" +formDefId+"]"));
 
-            final FormData formData = new FormData();
-            formData.setPrimaryKeyValue(primaryKey);
+            final Form form = Utilities.generateForm(formDefId, false);
+            final WorkflowAssignment assignment = getWorkflowAssignment();
 
-            return Optional.ofNullable(form.getLoadBinder())
-                    .map(b -> b.load(form, primaryKey, formData))
-                    .map(Collection::stream)
+            return Optional.of(formDefId)
+                    .map(Try.onFunction(Utilities::getJsonForm))
+                    .map(json -> Utilities.getFormLoadBinder(json, assignment))
+                    .map(binder -> Arrays.stream(primaryKeys)
+                            .map(primaryKey -> {
+                                final FormData formData = new FormData();
+                                formData.setPrimaryKeyValue(primaryKey);
+                                formData.setAssignment(assignment);
+
+                                return binder.load(form, primaryKey, formData);
+                            })
+                            .filter(Objects::nonNull)
+                            .flatMap(Collection::stream)
+                            .map(r -> r.getProperty(field)))
                     .orElseGet(Stream::empty)
-                    .findFirst()
-                    .map(r -> r.getProperty(field))
-                    .orElse("");
-
+                    .collect(Collectors.joining(";"));
         } catch (IllegalArgumentException e) {
             LogUtil.error(getClassName(), e, e.getMessage());
             return "";
@@ -118,29 +126,16 @@ public class FormBinderHashVariable extends DefaultHashVariablePlugin {
         String[] primaryKeys = null;
         HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
         if (request != null) {
-            if(request.getParameter("id") != null && !request.getParameter("id").isEmpty()) {
-                primaryKeys = new String[] { request.getParameter("id") };
-            } else if(request.getParameter("primaryKey") != null && !request.getParameter("primaryKey").isEmpty()) {
-                primaryKeys = new String[] { request.getParameter("primaryKey") };
+            if (request.getParameter("id") != null && !request.getParameter("id").isEmpty()) {
+                primaryKeys = new String[]{request.getParameter("id")};
+            } else if (request.getParameter("primaryKey") != null && !request.getParameter("primaryKey").isEmpty()) {
+                primaryKeys = new String[]{request.getParameter("primaryKey")};
             }
-        }
 
-        if(primaryKeys != null) {
             return primaryKeys;
         }
 
-        WorkflowAssignment wfAssignment = (WorkflowAssignment) getProperty("workflowAssignment");
-        if(wfAssignment == null) {
-            WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
-            String assignmentId = request.getParameter("assignmentId");
-            String activityId = request.getParameter("activityId");
-            if(assignmentId != null && !assignmentId.isEmpty()) {
-                wfAssignment = workflowManager.getAssignment(assignmentId);
-            } else if(activityId != null && !activityId.isEmpty()) {
-                wfAssignment = workflowManager.getAssignment(activityId);
-            }
-        }
-
+        WorkflowAssignment wfAssignment = getWorkflowAssignment();
         if (wfAssignment != null) {
             try {
                 ApplicationContext appContext = AppUtil.getApplicationContext();
@@ -148,9 +143,9 @@ public class FormBinderHashVariable extends DefaultHashVariablePlugin {
                 WorkflowProcessLink link = workflowManager.getWorkflowProcessLink(wfAssignment.getProcessId());
 
                 if (link != null) {
-                    primaryKeys = new String[] { link.getOriginProcessId() };
+                    primaryKeys = new String[]{link.getOriginProcessId()};
                 } else {
-                    primaryKeys = new String[] { wfAssignment.getProcessId() };
+                    primaryKeys = new String[]{wfAssignment.getProcessId()};
                 }
 
                 return primaryKeys;
@@ -160,5 +155,26 @@ public class FormBinderHashVariable extends DefaultHashVariablePlugin {
         }
 
         return null;
+    }
+
+    protected WorkflowAssignment getWorkflowAssignment() {
+        WorkflowAssignment wfAssignment = (WorkflowAssignment) getProperty("workflowAssignment");
+        if (wfAssignment != null) {
+            return wfAssignment;
+        }
+
+        WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
+        HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
+        if (request == null) {
+            return null;
+        }
+
+        String assignmentId = request.getParameter("assignmentId");
+        String activityId = request.getParameter("activityId");
+        if (assignmentId != null && !assignmentId.isEmpty()) {
+            return workflowManager.getAssignment(assignmentId);
+        } else if (activityId != null && !activityId.isEmpty()) {
+            return workflowManager.getAssignment(activityId);
+        } else return null;
     }
 }

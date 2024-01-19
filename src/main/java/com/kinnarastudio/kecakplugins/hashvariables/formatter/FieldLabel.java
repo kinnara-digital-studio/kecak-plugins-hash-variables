@@ -25,7 +25,6 @@ public class FieldLabel extends DefaultHashVariablePlugin {
     public String processHashVariable(String variableKey) {
         String[] split = variableKey.split("\\.", 3);
         if(split.length < 2) {
-            LogUtil.info(getClassName(), "VariableKey ["+variableKey+"]");
             LogUtil.warn(getClassName(), "Missing parameter, usage : formatter.optionsValue.[formDefId].[field]");
             return "";
         }
