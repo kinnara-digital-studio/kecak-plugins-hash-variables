@@ -22,6 +22,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(DataListHtmlHashVariable.class.getName(), new DataListHtmlHashVariable(), null));
         registrationList.add(context.registerService(FieldLabel.class.getName(), new FieldLabel(), null));
         registrationList.add(context.registerService(FormBinderHashVariable.class.getName(), new FormBinderHashVariable(), null));
+        registrationList.add(context.registerService(FormDataLastModifiedHashVariable.class.getName(), new FormDataLastModifiedHashVariable(), null));
         registrationList.add(context.registerService(GridHtmlTable.class.getName(), new GridHtmlTable(), null));
         registrationList.add(context.registerService(IdGeneratorHashVariable.class.getName(), new IdGeneratorHashVariable(), null));
         registrationList.add(context.registerService(OptionsLabel.class.getName(), new OptionsLabel(), null));
