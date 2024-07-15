@@ -7,6 +7,12 @@
     <version>1.0.0</version>
     <name>kecak-plugins-hash-variables</name>
     <url>http://www.kecak.org</url>
+    <scm>
+        <connection>scm:git:ssh://git@github.com:kinnara-digital-studio/kecak-plugins-hash-variables.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:kinnara-digital-studio/kecak-plugins-hash-variables.git</developerConnection>
+        <url>ssh://git@github.com:kinnara-digital-studio/kecak-plugins-hash-variables.git</url>
+        <tag>HEAD</tag>
+    </scm>
     <build>
         <plugins>
             <plugin>
