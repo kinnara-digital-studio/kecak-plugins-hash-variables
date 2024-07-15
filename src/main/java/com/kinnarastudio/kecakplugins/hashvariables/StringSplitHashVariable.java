@@ -1,12 +1,11 @@
 package com.kinnarastudio.kecakplugins.hashvariables;
 
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
+import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.PluginManager;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -53,12 +52,14 @@ public class StringSplitHashVariable extends DefaultHashVariablePlugin {
 
     @Override
     public String getVersion() {
-        return null;
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override
     public String getDescription() {
-        return null;
+        return getClass().getPackage().getImplementationTitle();
     }
 
     @Override

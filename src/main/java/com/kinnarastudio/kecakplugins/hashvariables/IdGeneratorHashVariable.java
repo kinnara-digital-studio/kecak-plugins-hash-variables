@@ -7,10 +7,12 @@ import org.joget.apps.app.model.DefaultHashVariablePlugin;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.IdGeneratorField;
 import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.PluginManager;
 
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -60,7 +62,9 @@ public class IdGeneratorHashVariable extends DefaultHashVariablePlugin {
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override

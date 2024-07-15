@@ -2,15 +2,14 @@ package com.kinnarastudio.kecakplugins.hashvariables;
 
 import com.kinnarastudio.kecakplugins.hashvariables.formatter.Utilities;
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
+import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.Form;
 import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.model.FormLoadBinder;
 import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.PluginManager;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class FormBinderHashVariable extends DefaultHashVariablePlugin {
@@ -61,7 +60,9 @@ public class FormBinderHashVariable extends DefaultHashVariablePlugin {
 
     @Override
     public String getVersion() {
-        return null;
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override

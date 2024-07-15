@@ -5,6 +5,7 @@ import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowActivity;
 import org.joget.workflow.model.WorkflowProcess;
 import org.joget.workflow.model.WorkflowVariable;
@@ -97,7 +98,9 @@ public class ActivityInfoHashVariable extends DefaultHashVariablePlugin {
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override

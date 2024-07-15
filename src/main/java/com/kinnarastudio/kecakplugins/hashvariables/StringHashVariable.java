@@ -2,11 +2,10 @@ package com.kinnarastudio.kecakplugins.hashvariables;
 
 import com.kinnarastudio.commons.Try;
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
+import org.joget.apps.app.service.AppUtil;
+import org.joget.plugin.base.PluginManager;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class StringHashVariable extends DefaultHashVariablePlugin {
     @Override
@@ -56,7 +55,9 @@ public class StringHashVariable extends DefaultHashVariablePlugin {
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override
