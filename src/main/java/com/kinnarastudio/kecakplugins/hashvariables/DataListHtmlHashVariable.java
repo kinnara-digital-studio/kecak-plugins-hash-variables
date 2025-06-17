@@ -8,6 +8,8 @@ import org.joget.apps.app.model.DefaultHashVariablePlugin;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListCollection;
+import org.joget.apps.datalist.model.DataListFilter;
+import org.joget.apps.datalist.model.DataListFilterType;
 import org.joget.apps.datalist.service.DataListService;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
@@ -19,7 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- *
+ * Usage: dataListHtml.{dataListId}.[{filterName1}={filterValue1}&{filterName2}={filterValue2}&...]
  */
 public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
     public final static String LABEL = "DataList HTML Hash Variable";
@@ -35,8 +37,23 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
         try {
             final String[] split = key.split("\\.", 2);
             final String dataListName = Arrays.stream(split).findFirst().orElseThrow(() -> new DataListHtmlException("DataList not defined"));
+            final Map<String, String[]> filters = Arrays.stream(split)
+                    .skip(1)
+                    .findFirst()
+                    .map(s -> s.replaceAll("^\\[|]$", ""))
+                    .map(s -> s.split("&"))
+                    .stream()
+                    .flatMap(Arrays::stream)
+                    .collect(Collectors.toMap(s -> s.replaceAll("=.+$", ""), s -> {
+                        String value = s.replaceAll("^[^=]+", "");
+                        return value.split(";");
+                    }));
+
+            filters.forEach((k, v) -> LogUtil.info(getClassName(), "Key [" + k + "] Val [" + v + "]"));
 
             final DataList dataList = getDataList(appDefinition, dataListName);
+            getCollectFilters(dataList, filters);
+
             final DataListCollection<Map<String, String>> rows = dataList.getRows();
 
             final String thTd = Arrays.stream(dataList.getColumns())
@@ -48,8 +65,8 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                     .collect(Collectors.joining(""));
 
             final String trTd = Optional.ofNullable(rows)
-                    .map(Collection::stream)
-                    .orElseGet(Stream::empty)
+                    .stream()
+                    .flatMap(Collection::stream)
                     .map(row -> {
                         final String td = Arrays.stream(dataList.getColumns())
                                 .map(c -> {
@@ -145,5 +162,26 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
     protected boolean isDefaultUserToHavePermission() {
         return !WorkflowUtil.isCurrentUserAnonymous();
 //        return WorkflowUtil.isCurrentUserInRole(WorkflowUtil.ROLE_ADMIN);
+    }
+
+    protected void getCollectFilters(@Nonnull final DataList dataList, @Nonnull final Map<String, String[]> filters) {
+        Optional.of(dataList)
+                .map(DataList::getFilters)
+                .stream()
+                .flatMap(Arrays::stream)
+                .filter(f -> Optional.of(f)
+                        .map(DataListFilter::getName)
+                        .map(filters::get)
+                        .map(l -> l.length > 0)
+                        .orElse(false))
+                .forEach(f -> {
+                    final DataListFilterType type = f.getType();
+                    final String name = f.getName();
+                    final String defaultValue = String.join(";", filters.get(name));
+                    type.setProperty("defaultValue", defaultValue);
+                });
+
+        dataList.getFilterQueryObjects();
+        dataList.setFilters(null);
     }
 }

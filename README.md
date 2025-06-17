@@ -31,7 +31,7 @@ git push -uf origin main
 - [ ] [Automatically close issues from merge requests](https://gitlab.com/-/experiment/new_project_readme_content:1169bc6f1f2d6ef07c12867ae024221f?https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
 - [ ] [Automatically merge when pipeline succeeds](https://gitlab.com/-/experiment/new_project_readme_content:1169bc6f1f2d6ef07c12867ae024221f?https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
 
-## Test and Deploy
+## TestCoalesceHashVariable and Deploy
 
 Use the built-in continuous integration in GitLab.
 

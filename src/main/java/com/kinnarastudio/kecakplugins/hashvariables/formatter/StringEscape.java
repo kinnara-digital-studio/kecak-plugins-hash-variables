@@ -9,14 +9,14 @@ import org.joget.plugin.base.PluginManager;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 /**
  * @author aristo
- *
+ * <p>
  * Usage : #formatter.stringEscape.[method].[value]#
- *
  */
 public class StringEscape extends DefaultHashVariablePlugin {
     @Override
@@ -27,14 +27,11 @@ public class StringEscape extends DefaultHashVariablePlugin {
     @Override
     public String processHashVariable(String variableKey) {
         // list down available methods
-        String messageAvailableMethods = "Available method(s) : " + Arrays.stream(StringEscapeUtils.class.getMethods())
-                .filter(m -> m.getParameterCount() == 1 && m.getParameterTypes()[0] == String.class)
-                .map(Method::getName)
-                .collect(Collectors.joining(", "));
+        String messageAvailableMethods = "Available method(s) : " + String.join(", ", getAvailableMethods());
 
         String[] split = variableKey.split("\\.", 2);
-        if(split.length < 2) {
-            LogUtil.warn(getClassName(), "Key error ["+variableKey+"]. Missing parameter(s). Usage : " + getPrefix() + ".[method].[value], please refer to single string parameter method of class " + StringEscapeUtils.class.getName());
+        if (split.length < 2) {
+            LogUtil.warn(getClassName(), "Key error [" + variableKey + "]. Missing parameter(s). Usage : " + getPrefix() + ".[method].[value], please refer to single string parameter method of class " + StringEscapeUtils.class.getName());
             LogUtil.warn(getClassName(), messageAvailableMethods);
             return "";
         }
@@ -82,5 +79,20 @@ public class StringEscape extends DefaultHashVariablePlugin {
     @Override
     public String getPropertyOptions() {
         return "";
+    }
+
+    @Override
+    public Collection<String> availableSyntax() {
+        return getAvailableMethods()
+                .stream()
+                .map(s -> String.join(".", getPrefix(), s, "VALUE"))
+                .collect(Collectors.toList());
+    }
+
+    protected Collection<String> getAvailableMethods() {
+        return Arrays.stream(StringEscapeUtils.class.getMethods())
+                .filter(m -> m.getParameterCount() == 1 && m.getParameterTypes()[0] == String.class)
+                .map(Method::getName)
+                .collect(Collectors.toList());
     }
 }
