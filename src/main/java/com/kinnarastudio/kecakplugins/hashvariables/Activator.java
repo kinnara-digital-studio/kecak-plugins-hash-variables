@@ -33,6 +33,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(StringSplitHashVariable.class.getName(), new StringSplitHashVariable(), null));
         registrationList.add(context.registerService(CoalesceHashVariable.class.getName(), new CoalesceHashVariable(), null));
         registrationList.add(context.registerService(StringFormatter.class.getName(), new StringFormatter(), null));
+        registrationList.add(context.registerService(EmploymentHashVariable.class.getName(), new EmploymentHashVariable(), null));
     }
 
     public void stop(BundleContext context) {
