@@ -1,6 +1,14 @@
 package com.kinnarastudio.kecakplugins.hashvariables;
 
-import com.kinnarastudio.kecakplugins.hashvariables.exception.DataListHtmlException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
+
 import org.joget.apps.app.dao.DatalistDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.DatalistDefinition;
@@ -15,15 +23,14 @@ import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
 
-import javax.annotation.Nonnull;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.kinnarastudio.kecakplugins.hashvariables.exception.DataListHtmlException;
 
 /**
- * Usage: dataListHtml.{dataListId}.[{filterName1}={filterValue1}&{filterName2}={filterValue2}&...]
+ * Usage:
+ * dataListHtml.{dataListId}.[{filterName1}={filterValue1}&{filterName2}={filterValue2}&...]
  */
 public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
+
     public final static String LABEL = "DataList HTML Hash Variable";
 
     @Override
@@ -45,7 +52,7 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                     .stream()
                     .flatMap(Arrays::stream)
                     .collect(Collectors.toMap(s -> s.replaceAll("=.+$", ""), s -> {
-                        String value = s.replaceAll("^[^=]+", "");
+                        String value = s.replaceFirst("^[^=]+=", "");
                         return value.split(";");
                     }));
 
@@ -60,7 +67,7 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                     .map(c -> {
                         final String name = c.getName();
                         final String label = c.getLabel();
-                        return "<td id='" + name + "' >" + label + "</td>";
+                        return "<td id='" + name + "' style=\"border: 1px solid black; padding: 8px;\">" + label + "</td>";
                     })
                     .collect(Collectors.joining(""));
 
@@ -73,7 +80,7 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                                     final String name = c.getName();
                                     final String label = c.getLabel();
                                     final String value = row.getOrDefault(name, "");
-                                    return "<td id='" + name + "' data-label='" + label + "'>" + value + "</td>";
+                                    return "<td id='" + name + "' data-label='" + label + "' style=\"border: 1px solid black; padding: 8px;\">" + value + "</td>";
                                 })
                                 .collect(Collectors.joining());
                         return td;
@@ -81,7 +88,9 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                     .map(s -> "<tr>" + s + "</tr>")
                     .collect(Collectors.joining());
 
-            return "<table id='" + dataListName + "'><thead>" + thTd + "</thead><tbody>" + trTd + "</tbody></table>";
+            String htmlDatalist = "<table id='" + dataListName + "' style=\"border-collapse: collapse; width: 100%;\"><thead><tr>" + thTd + "</tr></thead><tbody>" + trTd + "</tbody></table>";
+
+            return htmlDatalist;
         } catch (DataListHtmlException e) {
             LogUtil.error(getClass().getName(), e, e.getMessage());
             return null;
@@ -141,13 +150,12 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
 //        if (!isAuthorize(dataList)) {
 //            throw new DataListHtmlException("User [" + WorkflowUtil.getCurrentUsername() + "] is not authorized to access datalist [" + dataListId + "]");
 //        }
-
         return dataList;
     }
 
     /**
-     * Check datalist authorization
-     * Restrict if no permission is set and user is anonymous
+     * Check datalist authorization Restrict if no permission is set and user is
+     * anonymous
      *
      * @param dataList
      * @return
@@ -170,10 +178,10 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                 .stream()
                 .flatMap(Arrays::stream)
                 .filter(f -> Optional.of(f)
-                        .map(DataListFilter::getName)
-                        .map(filters::get)
-                        .map(l -> l.length > 0)
-                        .orElse(false))
+                .map(DataListFilter::getName)
+                .map(filters::get)
+                .map(l -> l.length > 0)
+                .orElse(false))
                 .forEach(f -> {
                     final DataListFilterType type = f.getType();
                     final String name = f.getName();
