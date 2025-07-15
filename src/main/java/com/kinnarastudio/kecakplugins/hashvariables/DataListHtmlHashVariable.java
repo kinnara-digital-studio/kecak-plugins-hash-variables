@@ -54,6 +54,7 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
 
             final DataListCollection<Map<String, String>> rows = dataList.getRows();
             final DataListColumn[] columns = dataList.getColumns();
+
             final String thTd = Arrays.stream(columns)
                     .map(c -> {
                         final String name = c.getName();
@@ -71,6 +72,7 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                                     final String name = c.getName();
                                     final String label = c.getLabel();
                                     final String value = row.getOrDefault(name, "");
+
                                     return "<td id='" + name + "' data-label='" + label + "' style=\"border: 1px solid black; padding: 8px;\">" + value + "</td>";
                                 })
                                 .collect(Collectors.joining());
