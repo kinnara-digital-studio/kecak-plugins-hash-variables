@@ -1,29 +1,20 @@
 package com.kinnarastudio.kecakplugins.hashvariables;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nonnull;
-
+import com.kinnarastudio.kecakplugins.hashvariables.exception.DataListHtmlException;
 import org.joget.apps.app.dao.DatalistDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.DatalistDefinition;
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
 import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.datalist.model.DataList;
-import org.joget.apps.datalist.model.DataListCollection;
-import org.joget.apps.datalist.model.DataListFilter;
-import org.joget.apps.datalist.model.DataListFilterType;
+import org.joget.apps.datalist.model.*;
 import org.joget.apps.datalist.service.DataListService;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
 
-import com.kinnarastudio.kecakplugins.hashvariables.exception.DataListHtmlException;
+import javax.annotation.Nonnull;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Usage:
@@ -56,14 +47,14 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                         return value.split(";");
                     }));
 
-            filters.forEach((k, v) -> LogUtil.info(getClassName(), "Key [" + k + "] Val [" + v + "]"));
+            filters.forEach((k, v) -> LogUtil.info(getClassName(), "Key [" + k + "] Val [" + String.join(" | ", v) + "]"));
 
             final DataList dataList = getDataList(appDefinition, dataListName);
             getCollectFilters(dataList, filters);
 
             final DataListCollection<Map<String, String>> rows = dataList.getRows();
-
-            final String thTd = Arrays.stream(dataList.getColumns())
+            final DataListColumn[] columns = dataList.getColumns();
+            final String thTd = Arrays.stream(columns)
                     .map(c -> {
                         final String name = c.getName();
                         final String label = c.getLabel();
@@ -75,7 +66,7 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                     .stream()
                     .flatMap(Collection::stream)
                     .map(row -> {
-                        final String td = Arrays.stream(dataList.getColumns())
+                        final String td = Arrays.stream(columns)
                                 .map(c -> {
                                     final String name = c.getName();
                                     final String label = c.getLabel();
@@ -178,10 +169,10 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                 .stream()
                 .flatMap(Arrays::stream)
                 .filter(f -> Optional.of(f)
-                .map(DataListFilter::getName)
-                .map(filters::get)
-                .map(l -> l.length > 0)
-                .orElse(false))
+                        .map(DataListFilter::getName)
+                        .map(filters::get)
+                        .map(l -> l.length > 0)
+                        .orElse(false))
                 .forEach(f -> {
                     final DataListFilterType type = f.getType();
                     final String name = f.getName();
