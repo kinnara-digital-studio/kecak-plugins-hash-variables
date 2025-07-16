@@ -1,20 +1,31 @@
 package com.kinnarastudio.kecakplugins.hashvariables;
 
-import com.kinnarastudio.kecakplugins.hashvariables.exception.DataListHtmlException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
+
 import org.joget.apps.app.dao.DatalistDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.DatalistDefinition;
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
 import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.datalist.model.*;
+import org.joget.apps.datalist.model.DataList;
+import org.joget.apps.datalist.model.DataListCollection;
+import org.joget.apps.datalist.model.DataListColumn;
+import org.joget.apps.datalist.model.DataListColumnFormat;
+import org.joget.apps.datalist.model.DataListFilter;
+import org.joget.apps.datalist.model.DataListFilterType;
 import org.joget.apps.datalist.service.DataListService;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
 
-import javax.annotation.Nonnull;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.kinnarastudio.kecakplugins.hashvariables.exception.DataListHtmlException;
 
 /**
  * Usage:
@@ -73,7 +84,23 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                                     final String label = c.getLabel();
                                     final String value = row.getOrDefault(name, "");
 
-                                    return "<td id='" + name + "' data-label='" + label + "' style=\"border: 1px solid black; padding: 8px;\">" + value + "</td>";
+                                    Collection<DataListColumnFormat> formatter = c.getFormats();
+
+                                    String formattedValue = value;
+
+                                    if (formatter != null) {
+                                        try {
+                                            DataListColumnFormat dataListColumnFormat = formatter.iterator().next();
+                                            if (dataListColumnFormat != null) {
+                                                formattedValue = dataListColumnFormat.format(dataList, c, row, value);
+                                            } else {
+                                                LogUtil.info(getClassName(), "DataList Column Formatter is null");
+                                            }
+                                        } catch (Exception e) {
+                                            LogUtil.error(getClassName(), e, "Error formatting column: " + c.getName());
+                                        }
+                                    }
+                                    return "<td id='" + name + "' data-label='" + label + "' style=\"border: 1px solid black; padding: 8px;\">" + formattedValue + "</td>";
                                 })
                                 .collect(Collectors.joining());
                         return td;
@@ -171,10 +198,10 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
                 .stream()
                 .flatMap(Arrays::stream)
                 .filter(f -> Optional.of(f)
-                        .map(DataListFilter::getName)
-                        .map(filters::get)
-                        .map(l -> l.length > 0)
-                        .orElse(false))
+                .map(DataListFilter::getName)
+                .map(filters::get)
+                .map(l -> l.length > 0)
+                .orElse(false))
                 .forEach(f -> {
                     final DataListFilterType type = f.getType();
                     final String name = f.getName();
