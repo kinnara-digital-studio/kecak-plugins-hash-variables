@@ -131,7 +131,7 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
 
     @Override
     public String getDescription() {
-        return LABEL;
+        return getClass().getPackage().getImplementationTitle();
     }
 
     @Override
