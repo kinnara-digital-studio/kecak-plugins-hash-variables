@@ -3,9 +3,11 @@ package com.kinnarastudio.kecakplugins.hashvariables;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
@@ -86,20 +88,33 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
 
                                     Collection<DataListColumnFormat> formatter = c.getFormats();
 
-                                    String formattedValue = value;
-
-                                    if (formatter != null) {
-                                        try {
-                                            DataListColumnFormat dataListColumnFormat = formatter.iterator().next();
-                                            if (dataListColumnFormat != null) {
-                                                formattedValue = dataListColumnFormat.format(dataList, c, row, value);
-                                            } else {
-                                                LogUtil.info(getClassName(), "DataList Column Formatter is null");
-                                            }
-                                        } catch (Exception e) {
-                                            LogUtil.error(getClassName(), e, "Error formatting column: " + c.getName());
-                                        }
-                                    }
+                                    // String formattedValue = value;
+                                    // if (formatter != null) {
+                                    //     try {
+                                    //         DataListColumnFormat dataListColumnFormat = formatter.iterator().next();
+                                    //         if (dataListColumnFormat != null) {
+                                    //             formattedValue = dataListColumnFormat.format(dataList, c, row, value);
+                                    //         } else {
+                                    //             LogUtil.info(getClassName(), "DataList Column Formatter is null");
+                                    //         }
+                                    //     } catch (Exception e) {
+                                    //         LogUtil.error(getClassName(), e, "Error formatting column: " + c.getName());
+                                    //     }
+                                    // }
+                                    String formattedValue = Optional.ofNullable(formatter)
+                                            .filter(f -> f != null && !f.isEmpty())
+                                            .map(Collection::stream)
+                                            .map(stream -> stream.filter(Objects::nonNull))
+                                            .flatMap(Stream::findFirst)
+                                            .map(f -> {
+                                                try {
+                                                    return f.format(dataList, c, row, value);
+                                                } catch (Exception e) {
+                                                    LogUtil.error(getClassName(), e, "Error formatting column: " + c.getName());
+                                                    return value;
+                                                }
+                                            })
+                                            .orElse(value);
                                     return "<td id='" + name + "' data-label='" + label + "' style=\"border: 1px solid black; padding: 8px;\">" + formattedValue + "</td>";
                                 })
                                 .collect(Collectors.joining());
