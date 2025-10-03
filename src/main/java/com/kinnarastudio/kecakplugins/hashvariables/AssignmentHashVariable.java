@@ -18,7 +18,7 @@ public class AssignmentHashVariable extends DefaultHashVariablePlugin {
 
     @Override
     public String getPrefix() {
-        return "wfAssignment";
+        return "workflowAssignment";
     }
 
     @Override
