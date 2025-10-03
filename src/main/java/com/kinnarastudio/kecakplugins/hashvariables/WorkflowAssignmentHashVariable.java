@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ResourceBundle;
 
-public class AssignmentHashVariable extends DefaultHashVariablePlugin {
+public class WorkflowAssignmentHashVariable extends DefaultHashVariablePlugin {
     public final static String LABEL = "Assignment Hash Variable";
 
     @Override
