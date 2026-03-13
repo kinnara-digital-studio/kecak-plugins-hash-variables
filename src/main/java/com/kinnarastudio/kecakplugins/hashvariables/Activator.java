@@ -17,10 +17,12 @@ public class Activator implements BundleActivator {
 
         //Register plugin here
         registrationList.add(context.registerService(ActivityInfoHashVariable.class.getName(), new ActivityInfoHashVariable(), null));
-        registrationList.add(context.registerService(WorkflowAssignmentHashVariable.class.getName(), new WorkflowAssignmentHashVariable(), null));
+        registrationList.add(context.registerService(AppEnvironmentVariableHashVariable.class.getName(), new AppEnvironmentVariableHashVariable(), null));
         registrationList.add(context.registerService(ApplicationDefinitionHashVariable.class.getName(), new ApplicationDefinitionHashVariable(), null));
+        registrationList.add(context.registerService(CoalesceHashVariable.class.getName(), new CoalesceHashVariable(), null));
         registrationList.add(context.registerService(ConvertCase.class.getName(), new ConvertCase(), null));
         registrationList.add(context.registerService(DataListHtmlHashVariable.class.getName(), new DataListHtmlHashVariable(), null));
+        registrationList.add(context.registerService(EmploymentHashVariable.class.getName(), new EmploymentHashVariable(), null));
         registrationList.add(context.registerService(FieldLabel.class.getName(), new FieldLabel(), null));
         registrationList.add(context.registerService(FormBinderHashVariable.class.getName(), new FormBinderHashVariable(), null));
         registrationList.add(context.registerService(FormDataLastModifiedHashVariable.class.getName(), new FormDataLastModifiedHashVariable(), null));
@@ -30,11 +32,10 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(OrganizationHashVariable.class.getName(), new OrganizationHashVariable(), null));
         registrationList.add(context.registerService(ProcessParticipantHashVariable.class.getName(), new ProcessParticipantHashVariable(), null));
         registrationList.add(context.registerService(StringEscape.class.getName(), new StringEscape(), null));
+        registrationList.add(context.registerService(StringFormatter.class.getName(), new StringFormatter(), null));
         registrationList.add(context.registerService(StringHashVariable.class.getName(), new StringHashVariable(), null));
         registrationList.add(context.registerService(StringSplitHashVariable.class.getName(), new StringSplitHashVariable(), null));
-        registrationList.add(context.registerService(CoalesceHashVariable.class.getName(), new CoalesceHashVariable(), null));
-        registrationList.add(context.registerService(StringFormatter.class.getName(), new StringFormatter(), null));
-        registrationList.add(context.registerService(EmploymentHashVariable.class.getName(), new EmploymentHashVariable(), null));
+        registrationList.add(context.registerService(WorkflowAssignmentHashVariable.class.getName(), new WorkflowAssignmentHashVariable(), null));
     }
 
     public void stop(BundleContext context) {
