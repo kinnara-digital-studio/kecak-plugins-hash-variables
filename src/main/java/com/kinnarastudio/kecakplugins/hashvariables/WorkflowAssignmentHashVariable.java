@@ -53,7 +53,7 @@ public class WorkflowAssignmentHashVariable extends DefaultHashVariablePlugin {
 
         if ("pendingAssignmentId".equals(key)) {
             return workflowAssignment.getActivityId();
-        } else if ("assignees".equals(key)) {
+        } else if ("pendingAssignees".equals(key)) {
             return Optional.of(workflowAssignment)
                     .map(WorkflowAssignment::getAssigneeList)
                     .stream()
@@ -102,7 +102,7 @@ public class WorkflowAssignmentHashVariable extends DefaultHashVariablePlugin {
         Collection<String> list = new ArrayList<>();
         list.add(getPrefix() + ".pendingAssignmentId");
         list.add(getPrefix() + ".recordId");
-        list.add(getPrefix() + ".assignees");
+        list.add(getPrefix() + ".pendingAssignees");
         return list;
     }
 }
