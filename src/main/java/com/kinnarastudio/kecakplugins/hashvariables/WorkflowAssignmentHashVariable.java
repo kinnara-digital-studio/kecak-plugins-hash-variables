@@ -2,8 +2,8 @@ package com.kinnarastudio.kecakplugins.hashvariables;
 
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
 import org.joget.apps.app.service.AppUtil;
-import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
+import org.joget.workflow.model.WorkflowActivity;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.WorkflowProcess;
 import org.joget.workflow.model.WorkflowProcessLink;
@@ -11,7 +11,9 @@ import org.joget.workflow.model.service.WorkflowManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class WorkflowAssignmentHashVariable extends DefaultHashVariablePlugin {
     public final static String LABEL = "Assignment Hash Variable";
@@ -26,20 +28,40 @@ public class WorkflowAssignmentHashVariable extends DefaultHashVariablePlugin {
         final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
         final WorkflowAssignment workflowAssignment = (WorkflowAssignment) getProperty("workflowAssignment");
 
-        if(workflowAssignment == null) {
-            LogUtil.warn(getClassName(), "Workflow assignment is NULL");
-            return "";
+        if ("recordId".equals(key)) {
+            final WorkflowProcess workflowProcess = workflowManager.getRunningProcessById(workflowAssignment.getProcessId());
+            String recordId = workflowProcess.getInstanceId();
+            WorkflowProcessLink link = workflowManager.getWorkflowProcessLink(recordId);
+            if (link != null) {
+                recordId = link.getOriginProcessId();
+            }
+
+            return recordId;
         }
 
-        final WorkflowProcess workflowProcess = workflowManager.getRunningProcessById(workflowAssignment.getProcessId());
 
-        String recordId = workflowProcess.getInstanceId();
-        WorkflowProcessLink link = workflowManager.getWorkflowProcessLink(recordId);
-        if (link != null) {
-            recordId = link.getOriginProcessId();
+        boolean isActivity = Optional.ofNullable(workflowAssignment)
+                .map(WorkflowAssignment::getActivityId)
+                .map(workflowManager::getActivityById)
+                .map(WorkflowActivity::getType)
+                .map(WorkflowActivity.TYPE_NORMAL::equals)
+                .orElse(false);
+
+        if (!isActivity) {
+            return null;
         }
 
-        return recordId;
+        if ("pendingAssignmentId".equals(key)) {
+            return workflowAssignment.getActivityId();
+        } else if ("assignees".equals(key)) {
+            return Optional.of(workflowAssignment)
+                    .map(WorkflowAssignment::getAssigneeList)
+                    .stream()
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.joining(";"));
+        }
+
+        return null;
     }
 
     @Override
@@ -78,7 +100,9 @@ public class WorkflowAssignmentHashVariable extends DefaultHashVariablePlugin {
     @Override
     public Collection<String> availableSyntax() {
         Collection<String> list = new ArrayList<>();
+        list.add(getPrefix() + ".pendingAssignmentId");
         list.add(getPrefix() + ".recordId");
+        list.add(getPrefix() + ".assignees");
         return list;
     }
 }
