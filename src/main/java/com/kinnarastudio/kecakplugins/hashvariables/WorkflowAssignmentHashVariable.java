@@ -51,7 +51,7 @@ public class WorkflowAssignmentHashVariable extends DefaultHashVariablePlugin {
             return null;
         }
 
-        if ("pendingAssignmentId".equals(key)) {
+        if ("assignmentId".equals(key) || "pendingAssignmentId".equals(key)) {
             return workflowAssignment.getActivityId();
         } else if ("pendingAssignees".equals(key)) {
             return Optional.of(workflowAssignment)
@@ -100,7 +100,7 @@ public class WorkflowAssignmentHashVariable extends DefaultHashVariablePlugin {
     @Override
     public Collection<String> availableSyntax() {
         Collection<String> list = new ArrayList<>();
-        list.add(getPrefix() + ".pendingAssignmentId");
+        list.add(getPrefix() + ".assignmentId");
         list.add(getPrefix() + ".recordId");
         list.add(getPrefix() + ".pendingAssignees");
         return list;
