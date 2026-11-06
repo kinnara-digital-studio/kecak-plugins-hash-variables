@@ -36,6 +36,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(StringHashVariable.class.getName(), new StringHashVariable(), null));
         registrationList.add(context.registerService(StringSplitHashVariable.class.getName(), new StringSplitHashVariable(), null));
         registrationList.add(context.registerService(WorkflowAssignmentHashVariable.class.getName(), new WorkflowAssignmentHashVariable(), null));
+        registrationList.add(context.registerService(ConvertImageBase64.class.getName(), new ConvertImageBase64(), null));
     }
 
     public void stop(BundleContext context) {
